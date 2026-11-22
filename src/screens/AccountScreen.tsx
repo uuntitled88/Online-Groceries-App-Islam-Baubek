@@ -1,61 +1,96 @@
-import React from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  SafeAreaView, 
-  ScrollView, 
-  TouchableOpacity 
+import React, { useCallback, useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
 } from 'react-native';
-
-const MENU_ITEMS = [
-  { id: '1', title: 'My Orders', icon: '📦' },
-  { id: '2', title: 'My Details', icon: 'T' },
-  { id: '3', title: 'Delivery Address', icon: '📍' },
-  { id: '4', title: 'Payment Methods', icon: '💳' },
-  { id: '5', title: 'Promo Cords', icon: '🎟️' },
-  { id: '6', title: 'Notifications', icon: '🔔' },
-  { id: '7', title: 'Help', icon: '❓' },
-  { id: '8', title: 'About', icon: 'ℹ️' },
-];
+import { useFocusEffect } from '@react-navigation/native';
+import {
+  DEFAULT_PROFILE,
+  loadProfile,
+  UserProfile,
+} from '../utils/userStorage';
 
 export default function AccountScreen({ navigation }: any) {
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      loadProfile().then((data) => {
+        if (active) {
+          setProfile(data);
+        }
+      });
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
+
+  const menuItems = [
+    { label: 'Orders', icon: '🛍️', route: 'Orders' },
+    { label: 'My Details', icon: '🪪', route: 'MyDetails' },
+    { label: 'Delivery Address', icon: '📍', route: 'DeliveryAddress' },
+    { label: 'Payment Methods', icon: '💳', route: 'PaymentMethods' },
+    { label: 'Promo Code', icon: '🏷️', route: 'PromoCode' },
+    { label: 'Notifications', icon: '🔔', route: 'Notifications' },
+    { label: 'Help', icon: '❓', route: 'Help' },
+    { label: 'About', icon: 'ℹ️', route: 'About' },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarText}>👤</Text>
+        <TouchableOpacity
+          style={styles.profileHeader}
+          onPress={() => navigation.navigate('MyDetails')}
+        >
+          <View style={styles.avatarBox}>
+            <Text style={styles.avatarIcon}>👤</Text>
           </View>
+
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Islam Developer</Text>
-            <Text style={styles.profileEmail}>islam@example.com</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.userName}>{profile.name}</Text>
+              <Text style={styles.editIcon}>✏️</Text>
+            </View>
+            <Text style={styles.userEmail}>{profile.email}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Menu List */}
-        <View style={styles.menuList}>
-          {MENU_ITEMS.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.menuItem}>
-              <View style={styles.menuItemLeft}>
+        <View style={styles.menuContainer}>
+          {menuItems.map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              style={styles.menuRow}
+              onPress={() => navigation.navigate(item.route)}
+            >
+              <View style={styles.menuLeft}>
                 <Text style={styles.menuIcon}>{item.icon}</Text>
-                <Text style={styles.menuTitle}>{item.title}</Text>
+                <Text style={styles.menuLabel}>{item.label}</Text>
               </View>
-              <Text style={styles.menuArrow}>›</Text>
+              <Text style={styles.chevron}>›</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Log Out Button */}
-        <TouchableOpacity 
+        {/* Log Out */}
+        <TouchableOpacity
           style={styles.logoutButton}
           onPress={() => navigation.replace('SignIn')}
         >
-          <Text style={styles.logoutButtonText}>Log Out</Text>
+          <Text style={styles.logoutIcon}>⇥</Text>
+          <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -63,19 +98,54 @@ export default function AccountScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
-  scrollContent: { padding: 20, paddingBottom: 90 },
-  profileHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 30, borderBottomWidth: 1, borderBottomColor: '#F2F3F2', paddingBottom: 20 },
-  avatarPlaceholder: { width: 65, height: 65, backgroundColor: '#F2F3F2', borderRadius: 32.5, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
-  avatarText: { fontSize: 30 },
+  scrollContent: { paddingBottom: 32 },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F3F2',
+  },
+  avatarBox: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  avatarIcon: { fontSize: 30 },
   profileInfo: { flex: 1 },
-  profileName: { fontSize: 18, fontWeight: 'bold', color: '#181725', marginBottom: 4 },
-  profileEmail: { fontSize: 14, color: '#7C7C7C' },
-  menuList: { marginBottom: 20 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#F2F3F2' },
-  menuItemLeft: { flexDirection: 'row', alignItems: 'center' },
-  menuIcon: { fontSize: 18, marginRight: 15, width: 25, textAlign: 'center' },
-  menuTitle: { fontSize: 16, fontWeight: '600', color: '#181725' },
-  menuArrow: { fontSize: 22, color: '#7C7C7C' },
-  logoutButton: { backgroundColor: '#F2F3F2', borderRadius: 20, padding: 18, alignItems: 'center', marginTop: 10 },
-  logoutButtonText: { color: '#53B175', fontSize: 16, fontWeight: 'bold' }
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  userName: { fontSize: 19, fontWeight: 'bold', color: '#181725' },
+  editIcon: { fontSize: 14 },
+  userEmail: { fontSize: 14, color: '#7C7C7C', marginTop: 4 },
+  menuContainer: { paddingHorizontal: 20 },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F3F2',
+  },
+  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  menuIcon: { fontSize: 18 },
+  menuLabel: { fontSize: 16, fontWeight: '600', color: '#181725' },
+  chevron: { fontSize: 22, color: '#181725', fontWeight: '500' },
+  logoutButton: {
+    marginTop: 28,
+    marginHorizontal: 20,
+    backgroundColor: '#F2F3F2',
+    borderRadius: 19,
+    paddingVertical: 18,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoutIcon: { fontSize: 20, color: '#53B175', fontWeight: 'bold' },
+  logoutText: { fontSize: 17, fontWeight: '700', color: '#53B175' },
 });
